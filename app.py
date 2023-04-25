@@ -1,3 +1,4 @@
+
 import gradio as gr
 import xgboost as xgb
 import numpy as np
@@ -7,53 +8,83 @@ model = xgb.Booster()
 model.load_model('model_weights.xgb')
 
 # Define a function to take in the input features and return the predicted target
-def predict_defaulter(EDUCATION_1, EDUCATION_2, EDUCATION_3, EDUCATION_4, SEX_1, SEX_2, MARRIAGE_1, MARRIAGE_2, MARRIAGE_3, LIMIT_BAL, AGE, PAY_1, PAY_2, PAY_3, PAY_4, PAY_5, PAY_6, BILL_AMT1, BILL_AMT2, BILL_AMT3, BILL_AMT4, BILL_AMT5, BILL_AMT6, PAY_AMT1, PAY_AMT2, PAY_AMT3, PAY_AMT4, PAY_AMT5, PAY_AMT6):
+def predict_defaulter(EDUCATION, SEX, MARRIAGE, LIMIT_BAL, AGE, PAY_1, PAY_2, PAY_3, PAY_4, PAY_5, PAY_6, BILL_AMT1, BILL_AMT2, BILL_AMT3, BILL_AMT4, BILL_AMT5, BILL_AMT6, PAY_AMT1, PAY_AMT2, PAY_AMT3, PAY_AMT4, PAY_AMT5, PAY_AMT6):
+
+    # Map the education level to numeric values
+    education_level = get_education_level(EDUCATION)
+
+    SEX_level = get_SEX_level(SEX)
+    MARRIAGE_level = get_MARIAGE_level(MARRIAGE)
+
     # Create a numpy array from the input features
-    features = np.array([EDUCATION_1, EDUCATION_2, EDUCATION_3, EDUCATION_4, SEX_1, SEX_2, MARRIAGE_1, MARRIAGE_2, MARRIAGE_3, LIMIT_BAL, AGE, PAY_1, PAY_2, PAY_3, PAY_4, PAY_5, PAY_6, BILL_AMT1, BILL_AMT2, BILL_AMT3, BILL_AMT4, BILL_AMT5, BILL_AMT6, PAY_AMT1, PAY_AMT2, PAY_AMT3, PAY_AMT4, PAY_AMT5, PAY_AMT6])
-    
+    features = np.array([education_level, SEX_level, MARRIAGE_level, LIMIT_BAL, AGE, PAY_1, PAY_2, PAY_3, PAY_4, PAY_5, PAY_6, BILL_AMT1, BILL_AMT2, BILL_AMT3, BILL_AMT4, BILL_AMT5, BILL_AMT6, PAY_AMT1, PAY_AMT2, PAY_AMT3, PAY_AMT4, PAY_AMT5, PAY_AMT6])
+
     # Reshape the array to match the expected shape of the model input
     features = features.reshape(1, -1)
-    
+
     # Use the loaded model to predict the target
     prediction = model.predict(xgb.DMatrix(features))
-    
+
     # Return the predicted target
     if prediction[0] == 0:
         return "Not a Defaulter"
     else:
         return "Defaulter"
 
+# Define a function to map education to numeric values
+def get_education_level(education):
+    if education == "graduate school":
+        return 1
+    elif education == "university":
+        return 2
+    elif education == "high school":
+        return 3
+    elif education == "others":
+        return 4
+    else:
+        return 0
+
+def get_SEX_level(SEX):
+    if SEX == "Masculin":
+        return 1
+    else:
+        return 2
+
+def get_MARIAGE_level(MARIAGE):
+    if MARIAGE == "marié":
+        return 1
+    elif MARIAGE == "célibataire":
+        return 2
+    else:
+        return 3
+
+
+
 # Define the input and output interfaces for the Gradio app
 input_interface = [
-    gr.inputs.Slider(0, 1, label='EDUCATION_1'),
-    gr.inputs.Slider(0, 1, label='EDUCATION_2'),
-    gr.inputs.Slider(0, 1, label='EDUCATION_3'),
-    gr.inputs.Slider(0, 1, label='EDUCATION_4'),
-    gr.inputs.Slider(0, 1, label='SEX_1'),
-    gr.inputs.Slider(0, 1, label='SEX_2'),
-    gr.inputs.Slider(0, 1, label='MARRIAGE_1'),
-    gr.inputs.Slider(0, 1, label='MARRIAGE_2'),
-    gr.inputs.Slider(0, 1, label='MARRIAGE_3'),
-    gr.inputs.Slider(0, 1000000, label='LIMIT_BAL'),
+    gr.inputs.Radio(choices=['graduate school', 'university', 'high school', 'others'], label='EDUCATION'),
+    gr.inputs.Radio(choices=['Masculin', 'Féminin'], label='SEX'),
+    gr.inputs.Radio(choices=['marié', 'célibataire','others'], label='MARIAGE'),
+    gr.inputs.Slider(0, 10000, label='LIMIT_BAL'),
     gr.inputs.Slider(18, 100, label='AGE'),
-    gr.inputs.Slider(-2, 8, label='PAY_1'),
-    gr.inputs.Slider(-2, 8, label='PAY_2'),
-    gr.inputs.Slider(-2, 8, label='PAY_3'),
-    gr.inputs.Slider(-2, 8, label='PAY_4'),
-    gr.inputs.Slider(-2, 8, label='PAY_5'),
-    gr.inputs.Slider(-2, 8, label='PAY_6'),
-    gr.inputs.Slider(-100000, 1000000, label='BILL_AMT1'),
-    gr.inputs.Slider(-100000, 1000000, label='BILL_AMT2'),
-    gr.inputs.Slider(-100000, 1000000, label='BILL_AMT3'),
-    gr.inputs.Slider(-100000, 1000000, label='BILL_AMT4'),
-    gr.inputs.Slider(-100000, 1000000, label='BILL_AMT5'),
-    gr.inputs.Slider(-100000, 1000000, label='BILL_AMT6'),
-    gr.inputs.Slider(0, 1000000, label='PAY_AMT1'),
-    gr.inputs.Slider(0, 1000000, label='PAY_AMT2'),
-    gr.inputs.Slider(0, 1000000, label='PAY_AMT3'),
-    gr.inputs.Slider(0, 1000000, label='PAY_AMT4'),
-    gr.inputs.Slider(0, 1000000, label='PAY_AMT5'),
-    gr.inputs.Slider(0, 1000000, label='PAY_AMT6')
+gr.inputs.Slider(minimum=-1, maximum=49, step=1, label='PAY_1'),
+gr.inputs.Slider(minimum=-1, maximum=49, step=1, label='PAY_2'),
+gr.inputs.Slider(minimum=-1, maximum=49, step=1, label='PAY_3'),
+gr.inputs.Slider(minimum=-1, maximum=49, step=1, label='PAY_4'),
+gr.inputs.Slider(minimum=-1, maximum=49, step=1, label='PAY_5'),
+gr.inputs.Slider(minimum=-1, maximum=49, step=1, label='PAY_6'),
+    gr.inputs.Slider(0, 10000, label='BILL_AMT1'),
+    gr.inputs.Slider(0, 10000, label='BILL_AMT2'),
+    gr.inputs.Slider(0, 10000, label='BILL_AMT3'),
+    gr.inputs.Slider(0, 10000, label='BILL_AMT4'),
+    gr.inputs.Slider(0, 10000, label='BILL_AMT5'),
+    gr.inputs.Slider(0, 10000, label='BILL_AMT6'),
+    gr.inputs.Slider(0, 10000, label='PAY_AMT1'),
+    gr.inputs.Slider(0, 10000, label='PAY_AMT2'),
+    gr.inputs.Slider(0, 10000, label='PAY_AMT3'),
+    gr.inputs.Slider(0, 10000, label='PAY_AMT4'),
+    gr.inputs.Slider(0, 10000, label='PAY_AMT5'),
+    gr.inputs.Slider(0, 10000, label='PAY_AMT6')
 
     ]
 
